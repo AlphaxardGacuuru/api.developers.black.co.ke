@@ -66,9 +66,9 @@ class InvoiceService extends Service
 
 		if ($latestInvoice) {
 			$lastNumber = intval(substr($latestInvoice->number, -6));
-			$invoiceNumber = str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
+			$invoiceNumber = "I-" . str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
 		} else {
-			$invoiceNumber = '000001';
+			$invoiceNumber = 'I-000001';
 		}
 
 		$invoice = new Invoice;

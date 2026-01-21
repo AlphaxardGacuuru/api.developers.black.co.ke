@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->string('number')->unique();
             $table->foreignId('user_id')
                 ->constrained( )
                 ->onUpdate('cascade')
