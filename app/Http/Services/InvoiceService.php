@@ -35,22 +35,15 @@ class InvoiceService extends Service
 		$invoiceQuery = $this->search($invoiceQuery, $request);
 
 		$invoices = $invoiceQuery
-			->orderBy("month", "DESC")
-			->orderBy("year", "DESC")
 			->orderBy("id", "DESC")
-			->paginate(20)
+			->paginate($request->per_page ?? 20)
 			->appends($request->all());
 
-		$sum = $invoiceQuery->sum("amount");
+		$sum = $invoiceQuery->sum("total");
 		$balance = $invoiceQuery->sum("balance");
 		$paid = $invoiceQuery->sum("paid");
 
-		return InvoiceResource::collection($invoices)
-			->additional([
-				"sum" => number_format($sum),
-				"balance" => number_format($balance),
-				"paid" => number_format($paid),
-			]);
+		return [$invoices, $sum, $balance, $paid];
 	}
 
 	/*
@@ -70,7 +63,7 @@ class InvoiceService extends Service
 	{
 		// Generate Invoice Number
 		$latestInvoice = Invoice::latest()->first();
-		
+
 		if ($latestInvoice) {
 			$lastNumber = intval(substr($latestInvoice->number, -6));
 			$invoiceNumber = str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
@@ -80,7 +73,7 @@ class InvoiceService extends Service
 
 		$invoice = new Invoice;
 		$invoice->number = $invoiceNumber;
-		$invoice->client_id = $request->clientId;
+		$invoice->user_id = $request->clientId;
 		$invoice->issue_date = $request->issueDate;
 		$invoice->due_date = $request->dueDate;
 		$invoice->total = $request->total;
@@ -109,11 +102,15 @@ class InvoiceService extends Service
      */
 	public function destroy($id)
 	{
-		$invoice = Invoice::findOrFail($id);
+		$ids = explode(",", $id);
 
-		$deleted = $invoice->delete();
+		$deleted = Invoice::whereIn("id", $ids)->delete();
 
-		return [$deleted, "Invoice Deleted Successfully", $invoice];
+		$message = count($ids) > 1 ?
+			"Invoices Deleted Successfully" :
+			"Invoice Deleted Successfully";
+
+		return [$deleted, $message, ""];
 	}
 
 	/*
@@ -146,20 +143,20 @@ class InvoiceService extends Service
 		$startYear = $request->input("startYear");
 		$endYear = $request->input("endYear");
 
-		if ($request->filled("startMonth")) {
-			$query = $query->where("month", ">=", $startMonth);
+		// Build start date filter
+		if ($request->filled("startMonth") || $request->filled("startYear")) {
+			$year = $startYear ?? date('Y');
+			$month = $startMonth ?? 1;
+			$startDate = Carbon::create($year, $month, 1)->startOfMonth();
+			$query = $query->where("created_at", ">=", $startDate);
 		}
 
-		if ($request->filled("endMonth")) {
-			$query = $query->where("month", "<=", $endMonth);
-		}
-
-		if ($request->filled("startYear")) {
-			$query = $query->where("year", ">=", $startYear);
-		}
-
-		if ($request->filled("endYear")) {
-			$query = $query->where("year", "<=", $endYear);
+		// Build end date filter
+		if ($request->filled("endMonth") || $request->filled("endYear")) {
+			$year = $endYear ?? date('Y');
+			$month = $endMonth ?? 12;
+			$endDate = Carbon::create($year, $month, 1)->endOfMonth();
+			$query = $query->where("created_at", "<=", $endDate);
 		}
 
 		return $query;

@@ -14,9 +14,16 @@ class InvoiceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        [$invoices, $sum, $balance, $paid] = $this->service->index($request);
+
+        return InvoiceResource::collection($invoices)
+            ->additional([
+                "sum" => number_format($sum),
+                "balance" => number_format($balance),
+                "paid" => number_format($paid),
+            ]);
     }
 
     /**
@@ -82,8 +89,14 @@ class InvoiceController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Invoice $invoice)
+    public function destroy($id)
     {
-        //
+        [$deleted, $message, $invoice] = $this->service->destroy($id);
+
+        return response([
+            "status" => $deleted,
+            "message" => $message,
+            "data" => $invoice,
+        ], 200);
     }
 }
