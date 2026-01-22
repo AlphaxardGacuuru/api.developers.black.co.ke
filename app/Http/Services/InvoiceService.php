@@ -51,9 +51,7 @@ class InvoiceService extends Service
      */
 	public function show($id)
 	{
-		$invoice = Invoice::find($id);
-
-		return new InvoiceResource($invoice);
+		return Invoice::find($id);
 	}
 
 	/*
@@ -61,22 +59,12 @@ class InvoiceService extends Service
      */
 	public function store($request)
 	{
-		// Generate Invoice Number
-		$latestInvoice = Invoice::latest()->first();
-
-		if ($latestInvoice) {
-			$lastNumber = intval(substr($latestInvoice->number, -6));
-			$invoiceNumber = "I-" . str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
-		} else {
-			$invoiceNumber = 'I-000001';
-		}
-
 		$invoice = new Invoice;
-		$invoice->number = $invoiceNumber;
 		$invoice->user_id = $request->clientId;
 		$invoice->issue_date = $request->issueDate;
 		$invoice->due_date = $request->dueDate;
 		$invoice->total = $request->total;
+		$invoice->balance = $request->total;
 		$invoice->notes = $request->notes;
 		$invoice->terms = $request->terms;
 		$invoice->status = $request->status;
@@ -95,6 +83,38 @@ class InvoiceService extends Service
 
 
 		return [$saved, "Invoice Created Successfully", $invoice];
+	}
+
+	/*
+	* Update Invoice
+	*/
+	public function update($request, $id)
+	{
+		$invoice = Invoice::find($id);
+		$invoice->user_id = $request->input("clientId", $invoice->user_id);
+		$invoice->issue_date = $request->input("issueDate", $invoice->issue_date);
+		$invoice->due_date = $request->input("dueDate", $invoice->due_date);
+		$invoice->total = $request->input("total", $invoice->total);
+		$invoice->notes = $request->input("notes", $invoice->notes);
+		$invoice->terms = $request->input("terms", $invoice->terms);
+		$invoice->status = $request->input("status", $invoice->status);
+		$saved = $invoice->save();
+
+		// Delete existing items
+		InvoiceItem::where("invoice_id", $invoice->id)->delete();
+
+		// Invoice Items
+		foreach ($request->lineItems as $lineItem) {
+			$invoiceItem = new InvoiceItem;
+			$invoiceItem->invoice_id = $invoice->id;
+			$invoiceItem->description = $lineItem['description'];
+			$invoiceItem->quantity = $lineItem['quantity'];
+			$invoiceItem->rate = $lineItem['rate'];
+			$invoiceItem->amount = $lineItem['amount'];
+			$saved = $invoiceItem->save();
+		}
+
+		return [$saved, "Invoice Updated Successfully", $invoice];
 	}
 
 	/*
@@ -135,7 +155,9 @@ class InvoiceService extends Service
 		$status = $request->input("status");
 
 		if ($request->filled("status")) {
-			$query = $query->where("status", $status);
+			$statuses = explode(",", $status);
+			
+			$query = $query->whereIn("status", $statuses);
 		}
 
 		$startMonth = $request->input("startMonth");

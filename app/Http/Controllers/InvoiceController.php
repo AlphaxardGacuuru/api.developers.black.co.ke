@@ -65,9 +65,11 @@ class InvoiceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Invoice $invoice)
+    public function show($id)
     {
-        //
+        $invoice = $this->service->show($id);
+
+        return new InvoiceResource($invoice);
     }
 
     /**
@@ -81,9 +83,29 @@ class InvoiceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Invoice $invoice)
+    public function update(Request $request, $id)
     {
-        //
+        $request->validate([
+            'clientId' => 'sometimes|required|integer|exists:users,id',
+            'issueDate' => 'sometimes|required|date',
+            'dueDate' => 'sometimes|required|date|after_or_equal:issueDate',
+            'lineItems' => 'sometimes|required|array|min:1',
+            'lineItems.*.description' => 'required_with:lineItems|string|max:500',
+            'lineItems.*.quantity' => 'required_with:lineItems|numeric|min:0.01',
+            'lineItems.*.rate' => 'required_with:lineItems|numeric|min:0',
+            'lineItems.*.amount' => 'required_with:lineItems|numeric|min:0',
+            'total' => 'sometimes|required|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
+            'terms' => 'nullable|string|max:1000',
+            'status' => 'sometimes|required|in:not_paid,partially_paid,paid,over_paid',
+        ]);
+
+        [$updated, $message, $invoice] = $this->service->update($request, $id);
+
+        return new InvoiceResource($invoice)->additional([
+            'updated' => $updated,
+            'message' => $message,
+        ]);
     }
 
     /**
