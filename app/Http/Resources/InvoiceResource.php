@@ -32,8 +32,8 @@ class InvoiceResource extends JsonResource
             "notes" => $this->notes,
             "terms" => $this->terms,
             "lineItems" => $this->invoiceItems,
-            "updatedAt" => $this->updatedAt,
-            "createdAt" => $this->createdAt,
+            "updatedAt" => $this->updated_at,
+            "createdAt" => $this->created_at,
         ];
     }
 }

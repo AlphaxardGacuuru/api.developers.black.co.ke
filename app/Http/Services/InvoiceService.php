@@ -156,7 +156,7 @@ class InvoiceService extends Service
 
 		if ($request->filled("status")) {
 			$statuses = explode(",", $status);
-			
+
 			$query = $query->whereIn("status", $statuses);
 		}
 
@@ -182,40 +182,5 @@ class InvoiceService extends Service
 		}
 
 		return $query;
-	}
-
-	/*
-     * Handle Invoice Adjustment
-     */
-	public function adjustInvoice($invoiceId)
-	{
-		$paid = Payment::where("invoice_id", $invoiceId)->sum("amount");
-
-		$creditNotes = CreditNote::where("invoice_id", $invoiceId)->sum("amount");
-
-		$deductions = Deduction::where("invoice_id", $invoiceId)->sum("amount");
-
-		$paid = $paid + $creditNotes - $deductions;
-
-		$invoice = Invoice::find($invoiceId);
-
-		$balance = $invoice->amount - $paid;
-
-		// Check if paid is enough
-		if ($paid == 0) {
-			$status = "not_paid";
-		} else if ($paid < $invoice->amount) {
-			$status = "partially_paid";
-		} else if ($paid == $invoice->amount) {
-			$status = "paid";
-		} else {
-			$status = "over_paid";
-		}
-
-		$invoice->paid = $paid;
-		$invoice->balance = $balance;
-		$invoice->status = $status;
-
-		return $invoice->save();
 	}
 }
