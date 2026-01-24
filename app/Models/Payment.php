@@ -12,13 +12,6 @@ class Payment extends Model
     /** @use HasFactory<\Database\Factories\PaymentFactory> */
     use HasFactory;
 
-    protected $fillable = [
-        'invoice_id',
-        'amount',
-        'payment_date',
-        'notes',
-    ];
-
     /**
      * Accessors.
      */
@@ -39,6 +32,11 @@ class Payment extends Model
     /**
      * Relationships
      */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);

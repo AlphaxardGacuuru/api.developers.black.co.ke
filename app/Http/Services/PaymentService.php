@@ -20,7 +20,7 @@ class PaymentService extends Service
 		$query = $this->search($query, $request);
 
 		$payments = $query
-			->with(['invoice.user'])
+			->with(['user', 'invoice.user'])
 			->orderBy("id", "DESC")
 			->paginate($request->per_page ?? 20)
 			->appends($request->all());
@@ -35,7 +35,7 @@ class PaymentService extends Service
      */
 	public function show($id)
 	{
-		return Payment::with(['invoice.user'])->find($id);
+		return Payment::with(['user', 'invoice.user'])->find($id);
 	}
 
 	/*
@@ -44,6 +44,7 @@ class PaymentService extends Service
 	public function store($request)
 	{
 		$payment = new Payment;
+		$payment->user_id = $request->user()->id;
 		$payment->invoice_id = $request->invoiceId;
 		$payment->amount = $request->amount;
 		$payment->payment_date = $request->paymentDate;

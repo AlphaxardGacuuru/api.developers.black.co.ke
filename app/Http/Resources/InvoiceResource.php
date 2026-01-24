@@ -14,7 +14,7 @@ class InvoiceResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $number = str_pad($this->id, 6, '0', STR_PAD_LEFT);
+        $number = str_pad($this->id, 4, '0', STR_PAD_LEFT);
         $number = "I-" . $number;
 
         return [

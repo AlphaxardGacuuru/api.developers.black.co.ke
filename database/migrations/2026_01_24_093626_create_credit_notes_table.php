@@ -17,6 +17,10 @@ return new class extends Migration
                 ->constrained()
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
+            $table->foreignId('user_id')
+                ->constrained()
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
             $table->decimal('amount', 10, 2);
             $table->date('issue_date');
             $table->text('notes')->nullable();
