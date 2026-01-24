@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CreditNoteController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeductionController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentController;
@@ -12,6 +13,8 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     // return
     return $request->user();
 });
+
+Route::get('/dashboard-stats', [DashboardController::class, 'getStats']);
 
 Route::resources([
     'users' => UserController::class,
