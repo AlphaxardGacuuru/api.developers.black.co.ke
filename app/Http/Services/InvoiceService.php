@@ -141,7 +141,7 @@ class InvoiceService extends Service
 		$number = $request->input("number");
 
 		if ($request->filled("number")) {
-			$query = $query->where("number", "LIKE", "%" . $number . "%");
+			$query = $query->where("id", "LIKE", "%" . $number . "%");
 		}
 
 		$unit = $request->input("unit");

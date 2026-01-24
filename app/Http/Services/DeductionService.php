@@ -2,24 +2,24 @@
 
 namespace App\Http\Services;
 
-use App\Models\CreditNote;
+use App\Models\Deduction;
 use App\Models\Invoice;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class CreditNoteService extends Service
+class DeductionService extends Service
 {
 	/*
-     * Fetch All Credit Notes
+     * Fetch All Deductions
      */
 	public function index($request)
 	{
-		$query = new CreditNote;
+		$query = new Deduction;
 
 		$query = $this->search($query, $request);
 
-		$creditNotes = $query
+		$deductions = $query
 			->with(['user', 'invoice.user'])
 			->orderBy("id", "DESC")
 			->paginate($request->per_page ?? 20)
@@ -27,55 +27,55 @@ class CreditNoteService extends Service
 
 		$sum = $query->sum("amount");
 
-		return [$creditNotes, $sum];
+		return [$deductions, $sum];
 	}
 
 	/*
-     * Fetch Credit Note
+     * Fetch Deduction
      */
 	public function show($id)
 	{
-		return CreditNote::with(['user', 'invoice.user'])->find($id);
+		return Deduction::with(['user', 'invoice.user'])->find($id);
 	}
 
 	/*
-     * Save Credit Note
+     * Save Deduction
      */
 	public function store($request)
 	{
-		$creditNote = new CreditNote;
-		$creditNote->user_id = $request->user()->id;
-		$creditNote->invoice_id = $request->invoiceId;
-		$creditNote->amount = $request->amount;
-		$creditNote->issue_date = $request->issueDate;
-		$creditNote->notes = $request->notes;
-		$saved = $creditNote->save();
+		$deduction = new Deduction;
+		$deduction->user_id = $request->user()->id;
+		$deduction->invoice_id = $request->invoiceId;
+		$deduction->amount = $request->amount;
+		$deduction->issue_date = $request->issueDate;
+		$deduction->notes = $request->notes;
+		$saved = $deduction->save();
 
-		return [$saved, "Credit Note Created Successfully", $creditNote];
+		return [$saved, "Deduction Created Successfully", $deduction];
 	}
 
 	/*
-     * Update Credit Note
+     * Update Deduction
      */
 	public function update($request, $id)
 	{
-		$creditNote = CreditNote::find($id);
+		$deduction = Deduction::find($id);
 
-		if (!$creditNote) {
-			return [false, "Credit Note not found", null];
+		if (!$deduction) {
+			return [false, "Deduction not found", null];
 		}
 
-		$creditNote->invoice_id = $request->input("invoiceId", $creditNote->invoice_id);
-		$creditNote->amount = $request->input("amount", $creditNote->amount);
-		$creditNote->issue_date = $request->input("issueDate", $creditNote->issue_date);
-		$creditNote->notes = $request->input("notes", $creditNote->notes);
-		$saved = $creditNote->save();
+		$deduction->invoice_id = $request->input("invoiceId", $deduction->invoice_id);
+		$deduction->amount = $request->input("amount", $deduction->amount);
+		$deduction->issue_date = $request->input("issueDate", $deduction->issue_date);
+		$deduction->notes = $request->input("notes", $deduction->notes);
+		$saved = $deduction->save();
 
-		return [$saved, "Credit Note Updated Successfully", $creditNote];
+		return [$saved, "Deduction Updated Successfully", $deduction];
 	}
 
 	/*
-     * Destroy Credit Note
+     * Destroy Deduction
      */
 	public function destroy($id)
 	{
@@ -84,13 +84,13 @@ class CreditNoteService extends Service
 		try {
 			$ids = explode(",", $id);
 
-			$creditNotes = CreditNote::whereIn("id", $ids)->get();
+			$deductions = Deduction::whereIn("id", $ids)->get();
 
-			$deleted = CreditNote::whereIn("id", $ids)->delete();
+			$deleted = Deduction::whereIn("id", $ids)->delete();
 
 			$message = count($ids) > 1 ?
-				"Credit Notes Deleted Successfully" :
-				"Credit Note Deleted Successfully";
+				"Deductions Deleted Successfully" :
+				"Deduction Deleted Successfully";
 
 			DB::commit();
 

@@ -97,7 +97,7 @@ class PaymentService extends Service
 			return [$deleted, $message, ""];
 		} catch (Exception $e) {
 			DB::rollBack();
-			
+
 			return [false, $e->getMessage(), ""];
 		}
 	}
@@ -107,6 +107,11 @@ class PaymentService extends Service
      */
 	public function search($query, $request)
 	{
+		// Search by number (id)
+		if ($request->filled("number")) {
+			$query = $query->where("id", "LIKE", "%" . $request->number . "%");
+		}
+
 		// Search by invoice number
 		if ($request->filled("invoiceId")) {
 			$query = $query->where("invoice_id", $request->invoiceId);
