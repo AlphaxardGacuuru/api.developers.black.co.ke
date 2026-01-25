@@ -38,6 +38,22 @@ class UserService extends Service
 		return $users;
 	}
 
+	/*
+	* Store User
+	*/ 
+	public function store($request)
+	{
+		$user = new User;
+		$user->name = $request->name;
+		$user->email = $request->email;
+		$user->phone = $request->phone;
+		$user->password = Hash::make($request->email);
+		$user->type = $request->type;
+		$saved = $user->save();
+
+		return [$saved, "Account Created Successfully", $user];
+	}
+
 	/**
 	 * Display the specified resource.
 	 *
@@ -61,12 +77,6 @@ class UserService extends Service
 
 		if ($request->filled('password')) {
 			$user->password = Hash::make($request->input('password'));
-		}
-
-		$user->settings = $request->input('settings', $user->settings);
-
-		if ($request->filled("userRoles")) {
-			$user->syncRoles($request->userRoles);
 		}
 
 		$saved = $user->save();
