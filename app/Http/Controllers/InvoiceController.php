@@ -56,7 +56,7 @@ class InvoiceController extends Controller
 
         [$saved, $message, $invoice] = $this->service->store($request);
 
-        return new InvoiceResource($invoice)->additional([
+        return (new InvoiceResource($invoice))->additional([
             'saved' => $saved,
             'message' => $message,
         ]);
@@ -102,7 +102,7 @@ class InvoiceController extends Controller
 
         [$updated, $message, $invoice] = $this->service->update($request, $id);
 
-        return new InvoiceResource($invoice)->additional([
+        return (new InvoiceResource($invoice))->additional([
             'updated' => $updated,
             'message' => $message,
         ]);

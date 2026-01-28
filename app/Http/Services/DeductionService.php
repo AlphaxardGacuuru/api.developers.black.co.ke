@@ -43,13 +43,22 @@ class DeductionService extends Service
      */
 	public function store($request)
 	{
+		$invoice = Invoice::find($request->invoiceId);
+
 		$deduction = new Deduction;
-		$deduction->user_id = $request->user()->id;
+		$deduction->user_id = $invoice->user_id;
 		$deduction->invoice_id = $request->invoiceId;
 		$deduction->amount = $request->amount;
 		$deduction->issue_date = $request->issueDate;
 		$deduction->notes = $request->notes;
-		$saved = $deduction->save();
+
+		$saved = DB::transaction(function () use ($deduction) {
+			$saved = $deduction->save();
+
+			$this->updateInvoiceStatus($deduction->invoice_id);
+
+			return $saved;
+		});
 
 		return [$saved, "Deduction Created Successfully", $deduction];
 	}
@@ -60,16 +69,17 @@ class DeductionService extends Service
 	public function update($request, $id)
 	{
 		$deduction = Deduction::find($id);
-
-		if (!$deduction) {
-			return [false, "Deduction not found", null];
-		}
-
-		$deduction->invoice_id = $request->input("invoiceId", $deduction->invoice_id);
 		$deduction->amount = $request->input("amount", $deduction->amount);
 		$deduction->issue_date = $request->input("issueDate", $deduction->issue_date);
 		$deduction->notes = $request->input("notes", $deduction->notes);
-		$saved = $deduction->save();
+
+		$saved = DB::transaction(function () use ($deduction) {
+			$saved = $deduction->save();
+
+			$this->updateInvoiceStatus($deduction->invoice_id);
+
+			return $saved;
+		});
 
 		return [$saved, "Deduction Updated Successfully", $deduction];
 	}
@@ -79,27 +89,23 @@ class DeductionService extends Service
      */
 	public function destroy($id)
 	{
-		DB::beginTransaction();
+		$ids = explode(",", $id);
 
-		try {
-			$ids = explode(",", $id);
+		$deleted = DB::transaction(function () use ($ids) {
+			$query = Deduction::whereIn("id", $ids);
+			
+			$deleted = $query->delete();
 
-			$deductions = Deduction::whereIn("id", $ids)->get();
+			$this->updateInvoiceStatus($query->first()->invoice_id);
 
-			$deleted = Deduction::whereIn("id", $ids)->delete();
+			return $deleted;
+		});
 
-			$message = count($ids) > 1 ?
-				"Deductions Deleted Successfully" :
-				"Deduction Deleted Successfully";
+		$message = count($ids) > 1 ?
+			"Deductions Deleted Successfully" :
+			"Deduction Deleted Successfully";
 
-			DB::commit();
-
-			return [$deleted, $message, ""];
-		} catch (Exception $e) {
-			DB::rollBack();
-
-			return [false, $e->getMessage(), ""];
-		}
+		return [$deleted, $message, ""];
 	}
 
 	/*

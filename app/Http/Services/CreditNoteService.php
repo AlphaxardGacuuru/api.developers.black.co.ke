@@ -43,13 +43,22 @@ class CreditNoteService extends Service
      */
 	public function store($request)
 	{
+		$invoice = Invoice::find($request->invoiceId);
+
 		$creditNote = new CreditNote;
-		$creditNote->user_id = $request->user()->id;
+		$creditNote->user_id = $invoice->user_id;
 		$creditNote->invoice_id = $request->invoiceId;
 		$creditNote->amount = $request->amount;
 		$creditNote->issue_date = $request->issueDate;
 		$creditNote->notes = $request->notes;
-		$saved = $creditNote->save();
+
+		$saved = DB::transaction(function () use ($creditNote) {
+			$saved = $creditNote->save();
+
+			$this->updateInvoiceStatus($creditNote->invoice_id);
+
+			return $saved;
+		});
 
 		return [$saved, "Credit Note Created Successfully", $creditNote];
 	}
@@ -60,16 +69,17 @@ class CreditNoteService extends Service
 	public function update($request, $id)
 	{
 		$creditNote = CreditNote::find($id);
-
-		if (!$creditNote) {
-			return [false, "Credit Note not found", null];
-		}
-
-		$creditNote->invoice_id = $request->input("invoiceId", $creditNote->invoice_id);
 		$creditNote->amount = $request->input("amount", $creditNote->amount);
 		$creditNote->issue_date = $request->input("issueDate", $creditNote->issue_date);
 		$creditNote->notes = $request->input("notes", $creditNote->notes);
-		$saved = $creditNote->save();
+
+		$saved = DB::transaction(function () use ($creditNote) {
+			$saved = $creditNote->save();
+
+			$this->updateInvoiceStatus($creditNote->invoice_id);
+
+			return $saved;
+		});
 
 		return [$saved, "Credit Note Updated Successfully", $creditNote];
 	}
@@ -79,27 +89,23 @@ class CreditNoteService extends Service
      */
 	public function destroy($id)
 	{
-		DB::beginTransaction();
+		$ids = explode(",", $id);
 
-		try {
-			$ids = explode(",", $id);
+		$deleted = DB::transaction(function () use ($ids) {
+			$query = CreditNote::whereIn("id", $ids);
 
-			$creditNotes = CreditNote::whereIn("id", $ids)->get();
+			$deleted = $query->delete();
 
-			$deleted = CreditNote::whereIn("id", $ids)->delete();
+			$this->updateInvoiceStatus($query->first()->invoice_id);
 
-			$message = count($ids) > 1 ?
-				"Credit Notes Deleted Successfully" :
-				"Credit Note Deleted Successfully";
+			return $deleted;
+		});
 
-			DB::commit();
+		$message = count($ids) > 1 ?
+			"Credit Notes Deleted Successfully" :
+			"Credit Note Deleted Successfully";
 
-			return [$deleted, $message, ""];
-		} catch (Exception $e) {
-			DB::rollBack();
-
-			return [false, $e->getMessage(), ""];
-		}
+		return [$deleted, $message, ""];
 	}
 
 	/*

@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\CreditNote;
 use App\Models\Deduction;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class DashboardService extends Service
@@ -17,6 +18,9 @@ class DashboardService extends Service
      */
     public function index()
     {
+        // Get clients stats
+        $clientsStats = $this->getClientsStats();
+
         // Get invoices stats
         $invoicesStats = $this->getInvoicesStats();
 
@@ -30,10 +34,29 @@ class DashboardService extends Service
         $deductionsStats = $this->getDeductionsStats();
 
         return [
+            'clients' => $clientsStats,
             'invoices' => $invoicesStats,
             'payments' => $paymentsStats,
             'creditNotes' => $creditNotesStats,
             'deductions' => $deductionsStats,
+        ];
+    }
+
+    /**
+     * Get clients statistics
+     *
+     * @return array
+     */
+    private function getClientsStats()
+    {
+        $stats = User::where("type", "client")
+            ->select(
+                DB::raw('COUNT(*) as count')
+            )
+            ->first();
+
+        return [
+            'count' => $stats->count ?? 0,
         ];
     }
 

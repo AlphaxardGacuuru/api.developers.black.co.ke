@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Http\Services\UserService;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -16,7 +18,7 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): AnonymousResourceCollection
     {
         $users = $this->service->index($request);
 
@@ -34,7 +36,7 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): UserResource
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -54,7 +56,7 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id): UserResource
     {
         $user = $this->service->show($id);
 
@@ -72,7 +74,7 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id): UserResource
     {
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -91,8 +93,13 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id) : UserResource
     {
-        //
+        [$deleted, $message, $data] = $this->service->destroy($id);
+
+        return (new UserResource($data))->additional([
+            'status' => $deleted,
+            'message' => $message,
+        ]);
     }
 }

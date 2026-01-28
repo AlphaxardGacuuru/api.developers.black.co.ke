@@ -17,12 +17,16 @@ class PaymentResource extends JsonResource
         $number = str_pad($this->id, 4, '0', STR_PAD_LEFT);
         $number = "P-" . $number;
 
+        $invoiceNumber = str_pad($this->invoice_id, 4, '0', STR_PAD_LEFT);
+        $invoiceNumber = "I-" . $invoiceNumber;
+
         return [
             'id' => $this->id,
             'userId' => $this->user_id,
             'userName' => $this->user->name,
             'userEmail' => $this->user->email,
             'invoiceId' => $this->invoice_id,
+            'invoiceNumber' => $invoiceNumber,
             'number' => $number,
             'clientName' => $this->invoice->user->name,
             'clientEmail' => $this->invoice->user->email,

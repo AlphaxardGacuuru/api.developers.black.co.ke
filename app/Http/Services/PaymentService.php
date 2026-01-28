@@ -43,13 +43,22 @@ class PaymentService extends Service
      */
 	public function store($request)
 	{
+		$invoice = Invoice::find($request->invoiceId);
+
 		$payment = new Payment;
-		$payment->user_id = $request->user()->id;
+		$payment->user_id = $invoice->user_id;
 		$payment->invoice_id = $request->invoiceId;
 		$payment->amount = $request->amount;
 		$payment->payment_date = $request->paymentDate;
 		$payment->notes = $request->notes;
-		$saved = $payment->save();
+
+		$saved = DB::transaction(function () use ($payment) {
+			$saved = $payment->save();
+
+			$this->updateInvoiceStatus($payment->invoice_id);
+
+			return $saved;
+		});
 
 		return [$saved, "Payment Created Successfully", $payment];
 	}
@@ -60,16 +69,17 @@ class PaymentService extends Service
 	public function update($request, $id)
 	{
 		$payment = Payment::find($id);
-
-		if (!$payment) {
-			return [false, "Payment not found", null];
-		}
-
-		$payment->invoice_id = $request->input("invoiceId", $payment->invoice_id);
 		$payment->amount = $request->input("amount", $payment->amount);
 		$payment->payment_date = $request->input("paymentDate", $payment->payment_date);
 		$payment->notes = $request->input("notes", $payment->notes);
-		$saved = $payment->save();
+
+		$saved = DB::transaction(function () use ($payment) {
+			$saved = $payment->save();
+
+			$this->updateInvoiceStatus($payment->invoice_id);
+
+			return $saved;
+		});
 
 		return [$saved, "Payment Updated Successfully", $payment];
 	}
@@ -79,27 +89,25 @@ class PaymentService extends Service
      */
 	public function destroy($id)
 	{
-		DB::beginTransaction();
+		$ids = explode(",", $id);
 
-		try {
-			$ids = explode(",", $id);
+		$deleted = DB::transaction(function () use ($ids) {
+			$query = Payment::whereIn("id", $ids);
 
-			$payments = Payment::whereIn("id", $ids)->get();
+			$deleted = $query->delete();
 
-			$deleted = Payment::whereIn("id", $ids)->delete();
+			$this->updateInvoiceStatus($query->first()->invoice_id);
 
-			$message = count($ids) > 1 ?
-				"Payments Deleted Successfully" :
-				"Payment Deleted Successfully";
+			return $deleted;
+		});
 
-			DB::commit();
+		$message = count($ids) > 1 ?
+			"Payments Deleted Successfully" :
+			"Payment Deleted Successfully";
 
-			return [$deleted, $message, ""];
-		} catch (Exception $e) {
-			DB::rollBack();
+		DB::commit();
 
-			return [false, $e->getMessage(), ""];
-		}
+		return [$deleted, $message, ""];
 	}
 
 	/*

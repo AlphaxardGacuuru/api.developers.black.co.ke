@@ -68,19 +68,25 @@ class InvoiceService extends Service
 		$invoice->notes = $request->notes;
 		$invoice->terms = $request->terms;
 		$invoice->status = $request->status;
-		$saved = $invoice->save();
 
-		// Invoice Items
-		foreach ($request->lineItems as $lineItem) {
-			$invoiceItem = new InvoiceItem;
-			$invoiceItem->invoice_id = $invoice->id;
-			$invoiceItem->description = $lineItem['description'];
-			$invoiceItem->quantity = $lineItem['quantity'];
-			$invoiceItem->rate = $lineItem['rate'];
-			$invoiceItem->amount = $lineItem['amount'];
-			$saved = $invoiceItem->save();
-		}
+		$saved = DB::transaction(function () use ($invoice, $request) {
+			$saved = $invoice->save();
 
+			// Invoice Items
+			foreach ($request->lineItems as $lineItem) {
+				$invoiceItem = new InvoiceItem;
+				$invoiceItem->invoice_id = $invoice->id;
+				$invoiceItem->description = $lineItem['description'];
+				$invoiceItem->quantity = $lineItem['quantity'];
+				$invoiceItem->rate = $lineItem['rate'];
+				$invoiceItem->amount = $lineItem['amount'];
+				$saved = $invoiceItem->save();
+			}
+
+			$this->updateInvoiceStatus($invoice->id);
+
+			return $saved;
+		});
 
 		return [$saved, "Invoice Created Successfully", $invoice];
 	}
@@ -98,21 +104,28 @@ class InvoiceService extends Service
 		$invoice->notes = $request->input("notes", $invoice->notes);
 		$invoice->terms = $request->input("terms", $invoice->terms);
 		$invoice->status = $request->input("status", $invoice->status);
-		$saved = $invoice->save();
 
-		// Delete existing items
-		InvoiceItem::where("invoice_id", $invoice->id)->delete();
+		$saved = DB::transaction(function () use ($invoice, $request) {
+			$saved = $invoice->save();
 
-		// Invoice Items
-		foreach ($request->lineItems as $lineItem) {
-			$invoiceItem = new InvoiceItem;
-			$invoiceItem->invoice_id = $invoice->id;
-			$invoiceItem->description = $lineItem['description'];
-			$invoiceItem->quantity = $lineItem['quantity'];
-			$invoiceItem->rate = $lineItem['rate'];
-			$invoiceItem->amount = $lineItem['amount'];
-			$saved = $invoiceItem->save();
-		}
+			// Delete existing items
+			InvoiceItem::where("invoice_id", $invoice->id)->delete();
+
+			// Invoice Items
+			foreach ($request->lineItems as $lineItem) {
+				$invoiceItem = new InvoiceItem;
+				$invoiceItem->invoice_id = $invoice->id;
+				$invoiceItem->description = $lineItem['description'];
+				$invoiceItem->quantity = $lineItem['quantity'];
+				$invoiceItem->rate = $lineItem['rate'];
+				$invoiceItem->amount = $lineItem['amount'];
+				$saved = $invoiceItem->save();
+			}
+
+			$this->updateInvoiceStatus($invoice->id);
+
+			return $saved;
+		});
 
 		return [$saved, "Invoice Updated Successfully", $invoice];
 	}
@@ -124,7 +137,13 @@ class InvoiceService extends Service
 	{
 		$ids = explode(",", $id);
 
-		$deleted = Invoice::whereIn("id", $ids)->delete();
+		$deleted = DB::transaction(function () use ($ids) {
+			$deleted = Invoice::whereIn("id", $ids)->delete();
+
+			$this->updateInvoiceStatus($ids[0]);
+
+			return $deleted;
+		});
 
 		$message = count($ids) > 1 ?
 			"Invoices Deleted Successfully" :
