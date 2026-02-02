@@ -51,7 +51,7 @@ class UserService extends Service
 		$user->type = $request->type;
 		$saved = $user->save();
 
-		return [$saved, "Account Created Successfully", $user];
+		return [$saved, "User Created Successfully", $user];
 	}
 
 	/**
@@ -81,7 +81,7 @@ class UserService extends Service
 
 		$saved = $user->save();
 
-		return [$saved, "Account Updated", $user];
+		return [$saved, "User Updated", $user];
 	}
 
 	/*

@@ -224,6 +224,7 @@
         @endif
 
         <div class="footer">
+            <div class="thanks">Pay to 0700364446 via M-Pesa.</div>
             <div class="thanks">Thank you for your business!</div>
         </div>
 
