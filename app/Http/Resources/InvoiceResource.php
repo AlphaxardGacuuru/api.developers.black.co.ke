@@ -14,14 +14,12 @@ class InvoiceResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $number = str_pad($this->id, 4, '0', STR_PAD_LEFT);
-        $number = "I-" . $number;
-
         return [
             "id" => $this->id,
-            "number" => $number,
+            "number" => $this->number,
             "clientId" => $this->user->id,
             "clientName" => $this->user->name,
+            "clientEmail" => $this->user->email,
             "amount" => number_format($this->total),
             "paid" => number_format($this->paid),
             "balance" => number_format($this->balance),
@@ -33,7 +31,7 @@ class InvoiceResource extends JsonResource
             "dueDate" => $this->due_date,
             "notes" => $this->notes,
             "terms" => $this->terms,
-            "lineItems" => $this->invoiceItems,
+            "invoiceItems" => $this->invoiceItems,
             "updatedAt" => $this->updated_at,
             "createdAt" => $this->created_at,
         ];

@@ -43,11 +43,11 @@ class InvoiceController extends Controller
             'clientId' => 'required|integer|exists:users,id',
             'issueDate' => 'required|date',
             'dueDate' => 'required|date|after_or_equal:issueDate',
-            'lineItems' => 'required|array|min:1',
-            'lineItems.*.description' => 'required|string|max:500',
-            'lineItems.*.quantity' => 'required|numeric|min:0.01',
-            'lineItems.*.rate' => 'required|numeric|min:0',
-            'lineItems.*.amount' => 'required|numeric|min:0',
+            'invoiceItems' => 'required|array|min:1',
+            'invoiceItems.*.description' => 'required|string|max:500',
+            'invoiceItems.*.quantity' => 'required|numeric|min:0.01',
+            'invoiceItems.*.rate' => 'required|numeric|min:0',
+            'invoiceItems.*.amount' => 'required|numeric|min:0',
             'total' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
             'terms' => 'nullable|string|max:1000',
@@ -89,11 +89,11 @@ class InvoiceController extends Controller
             'clientId' => 'sometimes|required|integer|exists:users,id',
             'issueDate' => 'sometimes|required|date',
             'dueDate' => 'sometimes|required|date|after_or_equal:issueDate',
-            'lineItems' => 'sometimes|required|array|min:1',
-            'lineItems.*.description' => 'required_with:lineItems|string|max:500',
-            'lineItems.*.quantity' => 'required_with:lineItems|numeric|min:0.01',
-            'lineItems.*.rate' => 'required_with:lineItems|numeric|min:0',
-            'lineItems.*.amount' => 'required_with:lineItems|numeric|min:0',
+            'invoiceItems' => 'sometimes|required|array|min:1',
+            'invoiceItems.*.description' => 'required_with:invoiceItems|string|max:500',
+            'invoiceItems.*.quantity' => 'required_with:invoiceItems|numeric|min:0.01',
+            'invoiceItems.*.rate' => 'required_with:invoiceItems|numeric|min:0',
+            'invoiceItems.*.amount' => 'required_with:invoiceItems|numeric|min:0',
             'total' => 'sometimes|required|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
             'terms' => 'nullable|string|max:1000',
@@ -120,5 +120,22 @@ class InvoiceController extends Controller
             "message" => $message,
             "data" => $invoice,
         ], 200);
+    }
+
+    public function previewPdf($id)
+    {
+        $pdf = $this->service->generatePdf($id);
+
+        return $pdf->stream("invoice-{$id}-preview.pdf");
+    }
+
+    /**
+     * Send invoice email with PDF attachment
+     */
+    public function sendInvoiceEmail($id)
+    {
+        $this->service->sendInvoiceEmail($id);
+        
+        return response()->json(['message' => 'Invoice Email Sent.']);
     }
 }

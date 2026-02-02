@@ -4,9 +4,10 @@ namespace App\Http\Services;
 
 use App\Models\Payment;
 use App\Models\Invoice;
-use Exception;
-use Illuminate\Http\Request;
+use App\Models\User;
+use App\Notifications\PaymentNotification;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PaymentService extends Service
 {
@@ -144,5 +145,32 @@ class PaymentService extends Service
 		}
 
 		return $query;
+	}
+
+	/*
+	 * Generate Payment PDF
+	 */
+	public function generatePdf($id)
+	{
+		$payment = Payment::findOrFail($id);
+
+		// This looks for resources/views/payments/pdf.blade.php
+		$pdf = Pdf::loadView('payments.pdf', compact('payment'));
+
+		return $pdf;
+	}
+
+	public function sendReceiptEmail($id)
+	{
+		$payment = Payment::findOrFail($id);
+
+		$generatedPdf = $this->generatePdf($id);
+
+		$pdf = $generatedPdf->output();
+
+		$al = User::where("email", "alphaxardgacuuru47@gmail.com")->first();
+
+		$al->notify(new PaymentNotification($payment, $pdf));
+		// $payment->user->notify(new PaymentNotification($payment));
 	}
 }

@@ -46,7 +46,6 @@ class Service
 		$paid = $totalPayments + $totalCreditNotes - $totalDeductions;
 
 		$invoices->each(function ($invoice) use (&$paid) {
-			Log::info("Processing Invoice ID: " . $invoice->id);
 			if ($paid <= 0) {
 				$invoice->paid = 0;
 				$invoice->balance = $invoice->total;

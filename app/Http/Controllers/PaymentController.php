@@ -87,4 +87,21 @@ class PaymentController extends Controller
             "data" => $payment,
         ], 200);
     }
+
+    public function previewPdf($id)
+    {
+        $pdf = $this->service->generatePdf($id);
+
+        return $pdf->stream("payment-{$id}-preview.pdf");
+    }
+
+    /**
+     * Send receipt email with PDF attachment
+     */
+    public function sendReceiptEmail($id)
+    {
+        $this->service->sendReceiptEmail($id);
+        
+        return response()->json(['message' => 'Receipt Email Sent.']);
+    }
 }

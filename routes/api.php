@@ -23,3 +23,10 @@ Route::resources([
     'credit-notes' => CreditNoteController::class,
     'deductions' => DeductionController::class
 ]);
+
+Route::get('/invoices/{id}/preview', [InvoiceController::class, 'previewPdf']);
+Route::get('/payments/{id}/preview', [PaymentController::class, 'previewPdf']);
+
+// Send invoice email
+Route::post('/invoices/{id}/send-email', [InvoiceController::class, 'sendInvoiceEmail']);
+Route::post('/payments/{id}/send-email', [PaymentController::class, 'sendReceiptEmail']);

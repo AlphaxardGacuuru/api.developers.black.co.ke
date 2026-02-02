@@ -12,18 +12,18 @@ class Invoice extends Model
     /** @use HasFactory<\Database\Factories\InvoiceFactory> */
     use HasFactory;
 
+    protected $appends = ['number'];
+
+    protected $casts = [
+        'issue_date' => 'date',
+        'due_date' => 'date',
+    ];
+
     /**
      * Accesors.
      *
      * @return \Illuminate\Database\Eloquent\Casts\Attribute
      */
-
-    protected function emailVerifiedAt(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => $value ? Carbon::parse($value)->format('d M Y') : null,
-        );
-    }
 
     protected function updatedAt(): Attribute
     {
@@ -66,5 +66,14 @@ class Invoice extends Model
     public function deductions()
     {
         return $this->hasMany(Deduction::class);
+    }
+
+    /*
+    * Custom Functions
+    */ 
+
+    public function getNumberAttribute()
+    {
+        return 'I-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
     }
 }

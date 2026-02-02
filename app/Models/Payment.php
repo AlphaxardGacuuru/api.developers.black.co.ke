@@ -12,6 +12,12 @@ class Payment extends Model
     /** @use HasFactory<\Database\Factories\PaymentFactory> */
     use HasFactory;
 
+    protected $appends = ['number'];
+
+    protected $casts = [
+        'payment_date' => 'date',
+    ];
+
     /**
      * Accessors.
      */
@@ -40,5 +46,14 @@ class Payment extends Model
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    /*
+    * Custom Functions
+    */
+
+    public function getNumberAttribute()
+    {
+        return 'P-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
     }
 }

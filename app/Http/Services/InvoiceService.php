@@ -2,26 +2,14 @@
 
 namespace App\Http\Services;
 
-use App\Http\Resources\InvoiceResource;
-use App\Mail\InvoiceMail;
-use App\Models\CreditNote;
-use App\Models\Deduction;
 use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\UserUnit;
-use App\Models\WaterReading;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\ValidationException;
-use App\Http\Services\EmailService;
-use App\Http\Services\SMSSendService;
 use App\Models\InvoiceItem;
 use App\Models\User;
-use App\Notifications\InvoiceReminderNotification;
+use App\Notifications\InvoiceNotification;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\Mailer\Exception\HttpTransportException;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceService extends Service
 {
@@ -73,13 +61,14 @@ class InvoiceService extends Service
 			$saved = $invoice->save();
 
 			// Invoice Items
-			foreach ($request->lineItems as $lineItem) {
+			foreach ($request->invoiceItems as $item) {
 				$invoiceItem = new InvoiceItem;
 				$invoiceItem->invoice_id = $invoice->id;
-				$invoiceItem->description = $lineItem['description'];
-				$invoiceItem->quantity = $lineItem['quantity'];
-				$invoiceItem->rate = $lineItem['rate'];
-				$invoiceItem->amount = $lineItem['amount'];
+				$invoiceItem->description = $item['description'];
+				$invoiceItem->quantity = $item['quantity'];
+				$invoiceItem->rate = $item['rate'];
+				$invoiceItem->amount = $item['amount'];
+				Log::info("Invoice Request: ", $invoiceItem->toArray());
 				$saved = $invoiceItem->save();
 			}
 
@@ -112,13 +101,13 @@ class InvoiceService extends Service
 			InvoiceItem::where("invoice_id", $invoice->id)->delete();
 
 			// Invoice Items
-			foreach ($request->lineItems as $lineItem) {
+			foreach ($request->invoiceItems as $invoiceItem) {
 				$invoiceItem = new InvoiceItem;
 				$invoiceItem->invoice_id = $invoice->id;
-				$invoiceItem->description = $lineItem['description'];
-				$invoiceItem->quantity = $lineItem['quantity'];
-				$invoiceItem->rate = $lineItem['rate'];
-				$invoiceItem->amount = $lineItem['amount'];
+				$invoiceItem->description = $invoiceItem['description'];
+				$invoiceItem->quantity = $invoiceItem['quantity'];
+				$invoiceItem->rate = $invoiceItem['rate'];
+				$invoiceItem->amount = $invoiceItem['amount'];
 				$saved = $invoiceItem->save();
 			}
 
@@ -201,5 +190,32 @@ class InvoiceService extends Service
 		}
 
 		return $query;
+	}
+
+	/*
+	 * Generate Invoice PDF
+	 */
+	public function generatePdf($id)
+	{
+		$invoice = Invoice::findOrFail($id);
+
+		// This looks for resources/views/invoices/pdf.blade.php
+		$pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+
+		return $pdf;
+	}
+
+	public function sendInvoiceEmail($id)
+	{
+		$invoice = Invoice::findOrFail($id);
+
+		$generatedPdf = $this->generatePdf($id);
+
+		$pdf = $generatedPdf->output();
+
+		$al = User::where("email", "alphaxardgacuuru47@gmail.com")->first();
+
+		$al->notify(new InvoiceNotification($invoice, $pdf));
+		// $invoice->user->notify(new InvoiceNotification($invoice));
 	}
 }
