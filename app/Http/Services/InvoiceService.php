@@ -101,13 +101,13 @@ class InvoiceService extends Service
 			InvoiceItem::where("invoice_id", $invoice->id)->delete();
 
 			// Invoice Items
-			foreach ($request->invoiceItems as $invoiceItem) {
+			foreach ($request->invoiceItems as $item) {
 				$invoiceItem = new InvoiceItem;
 				$invoiceItem->invoice_id = $invoice->id;
-				$invoiceItem->description = $invoiceItem['description'];
-				$invoiceItem->quantity = $invoiceItem['quantity'];
-				$invoiceItem->rate = $invoiceItem['rate'];
-				$invoiceItem->amount = $invoiceItem['amount'];
+				$invoiceItem->description = $item['description'];
+				$invoiceItem->quantity = $item['quantity'];
+				$invoiceItem->rate = $item['rate'];
+				$invoiceItem->amount = $item['amount'];
 				$saved = $invoiceItem->save();
 			}
 
@@ -152,11 +152,11 @@ class InvoiceService extends Service
 			$query = $query->where("id", "LIKE", "%" . $number . "%");
 		}
 
-		$unit = $request->input("unit");
+		$clientId = $request->input("clientId");
 
-		if ($request->filled("unit")) {
-			$query = $query->whereHas("userUnit.unit", function ($query) use ($unit) {
-				$query->where("name", "LIKE", "%" . $unit . "%");
+		if ($request->filled("clientId")) {
+			$query = $query->whereHas("user", function ($query) use ($clientId) {
+				$query->where("id", $clientId);
 			});
 		}
 
