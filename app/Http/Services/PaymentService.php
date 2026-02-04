@@ -116,17 +116,22 @@ class PaymentService extends Service
      */
 	public function search($query, $request)
 	{
-		// Search by number (id)
 		if ($request->filled("number")) {
 			$query = $query->where("id", "LIKE", "%" . $request->number . "%");
 		}
 
-		// Search by invoice number
+		$clientId = $request->input("clientId");
+
+		if ($request->filled("clientId")) {
+			$query = $query->whereHas("user", function ($query) use ($clientId) {
+				$query->where("id", $clientId);
+			});
+		}
+
 		if ($request->filled("invoiceId")) {
 			$query = $query->where("invoice_id", $request->invoiceId);
 		}
 
-		// Search by date range
 		if ($request->filled("startDate")) {
 			$query = $query->whereDate("payment_date", ">=", $request->startDate);
 		}
@@ -135,7 +140,6 @@ class PaymentService extends Service
 			$query = $query->whereDate("payment_date", "<=", $request->endDate);
 		}
 
-		// Search by amount range
 		if ($request->filled("minAmount")) {
 			$query = $query->where("amount", ">=", $request->minAmount);
 		}
