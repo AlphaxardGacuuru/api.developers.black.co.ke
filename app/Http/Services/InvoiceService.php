@@ -215,7 +215,7 @@ class InvoiceService extends Service
 
 		$al = User::where("email", "alphaxardgacuuru47@gmail.com")->first();
 
-		$al->notify(new InvoiceNotification($invoice, $pdf));
-		// $invoice->user->notify(new InvoiceNotification($invoice));
+		// $al->notify(new InvoiceNotification($invoice, $pdf));
+		$invoice->user->notify(new InvoiceNotification($invoice, $pdf));
 	}
 }
