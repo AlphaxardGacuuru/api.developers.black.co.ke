@@ -172,9 +172,6 @@ class PaymentService extends Service
 
 		$pdf = $generatedPdf->output();
 
-		$al = User::where("email", "alphaxardgacuuru47@gmail.com")->first();
-
-		$al->notify(new PaymentNotification($payment, $pdf));
-		// $payment->user->notify(new PaymentNotification($payment));
+		$payment->user->notify(new PaymentNotification($payment, $pdf));
 	}
 }
