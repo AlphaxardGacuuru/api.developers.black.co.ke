@@ -74,6 +74,7 @@ class UserService extends Service
 
 		$user->name = $request->input('name', $user->name);
 		$user->phone = $request->input('phone', $user->phone);
+		$user->email = $request->input('email', $user->email);
 
 		if ($request->filled('password')) {
 			$user->password = Hash::make($request->input('password'));
