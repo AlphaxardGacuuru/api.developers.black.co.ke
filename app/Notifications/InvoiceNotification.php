@@ -46,6 +46,7 @@ class InvoiceNotification extends Notification
             ->line('Invoice Number: ' . $this->invoice->number)
             ->line('Issue Date: ' . $this->invoice->issue_date->format('d M Y'))
             ->line('Due Date: ' . $this->invoice->due_date->format('d M Y'))
+            ->line('Balance Due: KES ' . number_format($this->invoice->balance))
             ->line('Total Amount: KES ' . number_format($this->invoice->total))
             ->line("Notes: " . $this->invoice->notes)
             ->line("Thank you for your business!")
