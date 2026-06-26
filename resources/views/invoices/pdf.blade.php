@@ -87,8 +87,8 @@
 
         /* Totals */
         .totals-table {
-            width: 40%;
-            margin-left: 60%;
+            width: 55%;
+            margin-left: 45%;
             margin-top: 20px;
         }
         .totals-table td {
