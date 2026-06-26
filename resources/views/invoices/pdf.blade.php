@@ -167,6 +167,7 @@
         <table class="items-table">
             <thead>
                 <tr>
+                    <th>Item</th>
                     <th>Description</th>
                     <th class="text-center">Quantity</th>
                     <th class="text-right">Rate</th>
@@ -176,7 +177,8 @@
             <tbody>
                 @foreach($invoice->invoiceItems as $item)
                 <tr>
-                    <td>{{ $item['description'] }}</td>
+                    <td>{{ $item['item'] }}</td>
+                    <td style="color: #4b5563; font-size: 12px;">{{ $item['description'] }}</td>
                     <td class="text-center">{{ $item['quantity'] }}</td>
                     <td class="text-right">
                         <small>KES</small> {{ number_format($item['rate'], 2) }}
@@ -192,6 +194,16 @@
         <table class="totals-table">
             <tr>
                 <td class="text-right">Subtotal:</td>
+                <td class="text-right">KES {{ number_format($invoice->invoiceItems->sum('amount'), 2) }}</td>
+            </tr>
+            @if($invoice->withholding_tax > 0)
+            <tr>
+                <td class="text-right">Withholding Tax (5%):</td>
+                <td class="text-right" style="color: #dc2626;">- KES {{ number_format($invoice->withholding_tax, 2) }}</td>
+            </tr>
+            @endif
+            <tr>
+                <td class="text-right">Total:</td>
                 <td class="text-right">KES {{ number_format($invoice->total, 2) }}</td>
             </tr>
             <tr>
@@ -224,7 +236,7 @@
         @endif
 
         <div class="footer">
-            <div class="thanks">Pay to 0700364446 via M-Pesa.</div>
+            <div class="thanks">Pay to 0700364446 via M-Pesa, unless otherwise stated.</div>
             <div class="thanks">Thank you for your business!</div>
         </div>
 

@@ -53,6 +53,7 @@ class InvoiceService extends Service
 		$invoice->due_date = $request->dueDate;
 		$invoice->total = $request->total;
 		$invoice->balance = $request->total;
+		$invoice->withholding_tax = $request->withholdingTax ?? 0;
 		$invoice->notes = $request->notes;
 		$invoice->terms = $request->terms;
 		$invoice->status = $request->status;
@@ -64,6 +65,7 @@ class InvoiceService extends Service
 			foreach ($request->invoiceItems as $item) {
 				$invoiceItem = new InvoiceItem;
 				$invoiceItem->invoice_id = $invoice->id;
+				$invoiceItem->item = $item['item'] ?? '';
 				$invoiceItem->description = $item['description'];
 				$invoiceItem->quantity = $item['quantity'];
 				$invoiceItem->rate = $item['rate'];
@@ -90,6 +92,7 @@ class InvoiceService extends Service
 		$invoice->issue_date = $request->input("issueDate", $invoice->issue_date);
 		$invoice->due_date = $request->input("dueDate", $invoice->due_date);
 		$invoice->total = $request->input("total", $invoice->total);
+		$invoice->withholding_tax = $request->input("withholdingTax", $invoice->withholding_tax);
 		$invoice->notes = $request->input("notes", $invoice->notes);
 		$invoice->terms = $request->input("terms", $invoice->terms);
 		$invoice->status = $request->input("status", $invoice->status);
@@ -104,6 +107,7 @@ class InvoiceService extends Service
 			foreach ($request->invoiceItems as $item) {
 				$invoiceItem = new InvoiceItem;
 				$invoiceItem->invoice_id = $invoice->id;
+				$invoiceItem->item = $item['item'] ?? '';
 				$invoiceItem->description = $item['description'];
 				$invoiceItem->quantity = $item['quantity'];
 				$invoiceItem->rate = $item['rate'];

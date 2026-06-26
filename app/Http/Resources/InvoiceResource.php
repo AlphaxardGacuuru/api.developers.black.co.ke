@@ -21,6 +21,7 @@ class InvoiceResource extends JsonResource
             "clientName" => $this->user->name,
             "clientEmail" => $this->user->email,
             "amount" => number_format($this->total),
+            "withholdingTax" => $this->withholding_tax,
             "paid" => number_format($this->paid),
             "balance" => number_format($this->balance),
             "credits" => number_format($this->creditNotes->sum('amount')),
