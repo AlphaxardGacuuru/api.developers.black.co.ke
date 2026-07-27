@@ -38,8 +38,14 @@ class InvoiceNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->cc('alphaxardgacuuru47@gmail.com')
+        $message = (new MailMessage)
+            ->bcc('alphaxardgacuuru47@gmail.com');
+
+        if ($notifiable->email === 'cynthia@greenspoon.co.ke') {
+            $message->cc('christine@greenspoon.co.ke');
+        }
+
+        return $message
             ->subject("Invoice {$this->invoice->number}")
             ->greeting('Hello ' . $notifiable->name . ',')
             ->line('A new invoice has been created for you.')
