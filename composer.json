@@ -9,6 +9,7 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^11.45.3",
+        "laravel/pulse": "^1.8",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "symfony/http-client": "^7.4",
