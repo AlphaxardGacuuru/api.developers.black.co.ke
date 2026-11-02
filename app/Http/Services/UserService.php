@@ -149,4 +149,35 @@ class UserService extends Service
 
 		return $query;
 	}
+
+	/*
+	 * Update the signed in user's name and email. A new email has to be
+	 * verified again.
+	 */
+	public function updateProfile(User $user, array $attributes): void
+	{
+		$user->fill($attributes);
+
+		if ($user->isDirty('email')) {
+			$user->email_verified_at = null;
+		}
+
+		$user->save();
+	}
+
+	/*
+	 * Set the signed in user's password (hashed by the model's cast).
+	 */
+	public function updatePassword(User $user, string $password): void
+	{
+		$user->update(['password' => $password]);
+	}
+
+	/*
+	 * Delete the signed in user's account.
+	 */
+	public function deleteAccount(User $user): void
+	{
+		$user->delete();
+	}
 }
