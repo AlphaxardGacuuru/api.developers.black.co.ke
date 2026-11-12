@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\ProfileAvatarUpdateRequest;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
 use App\Http\Services\UserService;
@@ -26,6 +27,19 @@ class ProfileController extends Controller
         return response()->json([
             'message' => 'Profile Updated',
             'data' => $request->user(),
+        ]);
+    }
+
+    /**
+     * Replace the user's profile picture.
+     */
+    public function updateAvatar(ProfileAvatarUpdateRequest $request): JsonResponse
+    {
+        $this->service->updateAvatar($request->user(), $request->file('avatar'));
+
+        return response()->json([
+            'message' => 'Profile picture updated.',
+            'avatar' => $request->user()->avatar,
         ]);
     }
 

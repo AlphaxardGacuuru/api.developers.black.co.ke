@@ -6,8 +6,10 @@ use App\Http\Resources\UserResource;
 use App\Models\CardTransaction;
 use App\Models\MPESATransaction;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
 class UserService extends Service
@@ -166,6 +168,26 @@ class UserService extends Service
 	}
 
 	/*
+	 * Store a new profile picture for $user, deleting the one they uploaded
+	 * before.
+	 */
+	public function updateAvatar(User $user, UploadedFile $avatar): void
+	{
+		$previous = $user->hasUploadedAvatar()
+			? $user->getRawOriginal('avatar')
+			: null;
+
+		$user
+			->forceFill(['avatar' => $avatar->store(User::AVATAR_UPLOAD_DIRECTORY, 'public')])
+			->save();
+
+		if ($previous) {
+			Storage::disk('public')
+				->delete($previous);
+		}
+	}
+
+	/*
 	 * Set the signed in user's password (hashed by the model's cast).
 	 */
 	public function updatePassword(User $user, string $password): void
@@ -178,6 +200,11 @@ class UserService extends Service
 	 */
 	public function deleteAccount(User $user): void
 	{
+		if ($user->hasUploadedAvatar()) {
+			Storage::disk('public')
+				->delete($user->getRawOriginal('avatar'));
+		}
+
 		$user->delete();
 	}
 }
